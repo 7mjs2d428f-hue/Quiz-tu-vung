@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz từ vựng</title>
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  box-sizing:border-box;
+}
+.box{
+  background:white;
+  width:100%;
+  max-width:500px;
+  border-radius:20px;
+  padding:25px;
+  box-sizing:border-box;
+  box-shadow:0 10px 30px #0004;
+}
+h1{text-align:center;margin-top:0}
+.progress{text-align:center;color:#666;margin-bottom:15px}
+.question{font-size:22px;font-weight:bold;margin:20px 0}
+.option{
+  width:100%;
+  padding:15px;
+  margin:8px 0;
+  border:2px solid #ddd;
+  border-radius:12px;
+  background:white;
+  font-size:17px;
+  text-align:left;
+  cursor:pointer;
+}
+.option:hover{background:#f3f3f3}
+.correct{background:#c8f7c5!important;border-color:#35a936!important}
+.wrong{background:#ffcaca!important;border-color:#e33!important}
+#feedback{
+  text-align:center;
+  font-weight:bold;
+  min-height:25px;
+  margin:15px 0;
+}
+button.next,#restart{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:12px;
+  background:#667eea;
+  color:white;
+  font-size:17px;
+  cursor:pointer;
+}
+#result{text-align:center}
+</style>
+</head>
+
+<body>
+<div class="box">
+  <h1>📚 Quiz từ vựng</h1>
+  <div id="quiz">
+    <div class="progress" id="progress"></div>
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+    <button class="next" id="next">Câu tiếp theo →</button>
+  </div>
+  <div id="result" style="display:none"></div>
+</div>
+
+<script>
+const words = [
+["accessible to","dễ tiếp cận với"],
+["account","bản tường thuật, câu chuyện kể lại"],
+["adopt","nhận nuôi"],
+["adoption","sự nhận con nuôi"],
+["ambitious","có tham vọng, đầy hoài bão"],
+["animated","hoạt hình; sôi nổi, hào hứng"],
+["army","quân đội"],
+["attack","cuộc tấn công; tấn công"],
+["attend college","học đại học/cao đẳng"],
+["battle","trận chiến, trận đánh"],
+["be admired for","được ngưỡng mộ vì"],
+["biography","tiểu sử"],
+["biological parents","cha mẹ ruột"],
+["blockbuster","tác phẩm/bộ phim ăn khách"],
+["bond over","gắn kết vì có điểm chung"],
+["carry out","thực hiện, tiến hành"],
+["childhood","thời thơ ấu"],
+["Communist Party of Viet Nam","Đảng Cộng sản Việt Nam"],
+["contribute to","đóng góp cho"],
+["cutting-edge","tiên tiến, hiện đại nhất"],
+["death","cái chết, sự qua đời"],
+["dedicated to","tận tụy, hết lòng vì"],
+["defeat","đánh bại; sự thất bại"],
+["determination","sự quyết tâm"],
+["devote (oneself) to","cống hiến, dành hết cho"],
+["diagnose with","chẩn đoán mắc (bệnh)"],
+["diary","nhật ký"],
+["do one's duty","làm tròn nhiệm vụ"],
+["drop out (of)","bỏ học giữa chừng"],
+["enemy","kẻ thù, quân địch"],
+["field hospital","bệnh viện dã chiến"],
+["germs","vi trùng, vi khuẩn"],
+["impressive achievement","thành tựu ấn tượng"],
+["marriage","hôn nhân"],
+["military","quân đội; thuộc quân sự"],
+["national hero","anh hùng dân tộc"],
+["on cloud nine / on top of the world / over the moon","vui sướng tột độ"],
+["pancreatic cancer","ung thư tuyến tụy"],
+["pass away","qua đời"],
+["poem","bài thơ"]
+];
+
+let questions=[];
+let current=0;
+let score=0;
+let answered=false;
+
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+function start(){
+  questions=shuffle([...words]).map(item=>{
+    let answers=[item[1]];
+    let others=shuffle(words.filter(x=>x[0]!==item[0])).slice(0,3);
+    answers.push(...others.map(x=>x[1]));
+    return {
+      word:item[0],
+      correct:item[1],
+      answers:shuffle(answers)
+    };
+  });
+  current=0;
+  score=0;
+  document.getElementById("quiz").style.display="block";
+  document.getElementById("result").style.display="none";
+  showQuestion();
+}
+
+function showQuestion(){
+  answered=false;
+  let q=questions[current];
+
+  document.getElementById("progress").textContent=
+    `Câu ${current+1}/${questions.length}`;
+
+  document.getElementById("question").textContent=
+    `"${q.word}" có nghĩa là gì?`;
+
+  document.getElementById("feedback").textContent="";
+
+  let options=document.getElementById("options");
+  options.innerHTML="";
+
+  q.answers.forEach((answer,i)=>{
+    let btn=document.createElement("button");
+    btn.className="option";
+    btn.textContent=String.fromCharCode(65+i)+". "+answer;
+
+    btn.onclick=()=>{
+      if(answered)return;
+      answered=true;
+
+      if(answer===q.correct){
+        btn.classList.add("correct");
+        document.getElementById("feedback").textContent="✅ Chính xác!";
+        score++;
+      }else{
+        btn.classList.add("wrong");
+        document.getElementById("feedback").textContent=
+          "❌ Sai! Đáp án đúng: "+q.correct;
+
+        [...options.children].forEach(b=>{
+          if(b.textContent.includes(q.correct))
+            b.classList.add("correct");
+        });
+      }
+    };
+
+    options.appendChild(btn);
+  });
+}
+
+document.getElementById("next").onclick=()=>{
+  if(!answered){
+    document.getElementById("feedback").textContent=
+      "⚠️ Hãy chọn một đáp án!";
+    return;
+  }
+
+  current++;
+
+  if(current<questions.length){
+    showQuestion();
+  }else{
+    document.getElementById("quiz").style.display="none";
+    let result=document.getElementById("result");
+    result.style.display="block";
+
+    let percent=Math.round(score/questions.length*100);
+
+    result.innerHTML=`
+      <h2>🎉 Hoàn thành!</h2>
+      <p style="font-size:22px">
+        Bạn đúng <b>${score}/${questions.length}</b> câu
+      </p>
+      <p style="font-size:20px">Điểm: <b>${percent}%</b></p>
+      <button id="restart">🔄 Làm lại</button>
+    `;
+
+    document.getElementById("restart").onclick=start;
+  }
+};
+
+start();
+</script>
+</body>
+</html>
